@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  example_service:
+    build:
+      context: ./services/example_service
+      dockerfile: Dockerfile
+    container_name: example_service
+    ports:
+    - 8000:8000
+    networks:
+    - microservices
+    environment:
+      SERVICE_NAME: example_service
+      SERVICE_PORT: 8000
+    restart: unless-stopped
+    healthcheck:
+      test: curl -f http://localhost:8000/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    ports:
+    - 80:80
+    networks:
+    - microservices
+    depends_on:
+    - example_service
+    restart: unless-stopped
+    environment:
+      SERVICES: '{"example_service": "http://example_service:8000"}'
+networks:
+  microservices:
+    driver: bridge

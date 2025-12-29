@@ -1,0 +1,241 @@
+name: BTEC Virtual World – Full Microservices CI/CD (Railway)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  # أسماء الخدمات كما ستظهر في Railway (Web Services)
+  FRONTEND_SERVICE_NAME: btec-frontend
+  GATEWAY_SERVICE_NAME: btec-gateway
+  AUTH_SERVICE_NAME: btec-auth
+  AI_SERVICE_NAME: btec-ai
+  BTEC_SERVICE_NAME: btec-assessment
+  EXAMPLE_SERVICE_NAME: btec-example
+
+  # قواعد البيانات والكاش
+  POSTGRES_SERVICE_NAME: btec-postgres
+  REDIS_SERVICE_NAME: btec-redis
+
+  # مسارات في المشروع
+  FRONTEND_DIR: frontend
+  GATEWAY_DIR: backend/gateway
+  AUTH_DIR: backend/auth
+  AI_DIR: backend/ai
+  BTEC_DIR: backend/btec_assessment
+  EXAMPLE_DIR: backend/example_service
+
+jobs:
+  build-and-test:
+    name: Build & Test All Services
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # -------- FRONTEND --------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install & Build Frontend
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Archive Frontend Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: ${{ env.FRONTEND_DIR }}/dist
+
+      # -------- BACKEND PYTHON SERVICES --------
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Gateway deps
+        working-directory: ${{ env.GATEWAY_DIR }}
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install Auth deps
+        working-directory: ${{ env.AUTH_DIR }}
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install AI deps
+        working-directory: ${{ env.AI_DIR }}
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install BTEC Assessment deps
+        working-directory: ${{ env.BTEC_DIR }}
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install Example Service deps
+        working-directory: ${{ env.EXAMPLE_DIR }}
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      # هنا تقدر تضيف pytest / unit tests لكل خدمة لو جاهزة
+      - name: Run backend tests (optional)
+        run: |
+          echo "TODO: add pytest commands here if needed"
+
+  deploy:
+    name: Deploy to Railway (Microservices)
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend-build
+
+      - name: Install Railway CLI
+        run: |
+          npm install -g @railway/cli
+          railway --version
+
+      # -------- DATABASES (PostgreSQL + Redis) --------
+      - name: Ensure PostgreSQL & Redis exist
+        run: |
+          echo "Ensuring PostgreSQL & Redis services exist in Railway..."
+
+          railway link --project $RAILWAY_PROJECT_ID --environment $RAILWAY_ENVIRONMENT_ID
+
+          # إنشاء PostgreSQL إذا لم يكن موجودًا
+          railway service:list | grep "${POSTGRES_SERVICE_NAME}" || railway service:create --plugin postgresql --name "${POSTGRES_SERVICE_NAME}"
+
+          # إنشاء Redis إذا لم يكن موجودًا
+          railway service:list | grep "${REDIS_SERVICE_NAME}" || railway service:create --plugin redis --name "${REDIS_SERVICE_NAME}"
+
+      # -------- FRONTEND DEPLOY --------
+      - name: Deploy Frontend to Railway
+        working-directory: ${{ env.FRONTEND_DIR }}
+        run: |
+          railway link --project $RAILWAY_PROJECT_ID --environment $RAILWAY_ENVIRONMENT_ID
+          railway up \
+            --service $FRONTEND_SERVICE_NAME \
+            --detach
+
+      # -------- GATEWAY DEPLOY --------
+      - name: Deploy API Gateway
+        working-directory: ${{ env.GATEWAY_DIR }}
+        run: |
+          railway link --project $RAILWAY_PROJECT_ID --environment $RAILWAY_ENVIRONMENT_ID
+          railway up \
+            --service $GATEWAY_SERVICE_NAME \
+            --detach
+
+      # -------- AUTH SERVICE DEPLOY --------
+      - name: Deploy Auth Service
+        working-directory: ${{ env.AUTH_DIR }}
+        run: |
+          railway link --project $RAILWAY_PROJECT_ID --environment $RAILWAY_ENVIRONMENT_ID
+          railway up \
+            --service $AUTH_SERVICE_NAME \
+            --detach
+
+      # -------- AI SERVICE DEPLOY --------
+      - name: Deploy AI Service
+        working-directory: ${{ env.AI_DIR }}
+        run: |
+          railway link --project $RAILWAY_PROJECT_ID --environment $RAILWAY_ENVIRONMENT_ID
+          railway up \
+            --service $AI_SERVICE_NAME \
+            --detach
+
+      # -------- BTEC ASSESSMENT ENGINE DEPLOY --------
+      - name: Deploy BTEC Assessment Engine
+        working-directory: ${{ env.BTEC_DIR }}
+        run: |
+          railway link --project $RAILWAY_PROJECT_ID --environment $RAILWAY_ENVIRONMENT_ID
+          railway up \
+            --service $BTEC_SERVICE_NAME \
+            --detach
+
+      # -------- EXAMPLE SERVICE DEPLOY --------
+      - name: Deploy Example Service
+        working-directory: ${{ env.EXAMPLE_DIR }}
+        run: |
+          railway link --project $RAILWAY_PROJECT_ID --environment $RAILWAY_ENVIRONMENT_ID
+          railway up \
+            --service $EXAMPLE_SERVICE_NAME \
+            --detach
+
+      # -------- DATABASE MIGRATIONS --------
+      - name: Run DB migrations (if any)
+        working-directory: ${{ env.BTEC_DIR }}
+        run: |
+          echo "Running database migrations..."
+          # مثال: alembic upgrade head أو python manage.py migrate
+          if [ -f "alembic.ini" ]; then
+            alembic upgrade head || echo "Alembic not configured yet"
+          else
+            echo "No migration tool configured yet"
+          fi
+
+      # -------- HEALTH CHECKS + AUTO-ROLLBACK منطق بسيط --------
+      - name: Health Check & Auto-Rollback
+        run: |
+          echo "Running basic health checks..."
+
+          # مثال endpoints:
+          # Gateway health: /health
+          # Frontend: /
+          # طبّق حسب تصميمك الفعلي لاحقًا
+
+          set -e
+
+          GATEWAY_URL=$(railway status --service $GATEWAY_SERVICE_NAME --json | jq -r '.[0].url // empty')
+          FRONTEND_URL=$(railway status --service $FRONTEND_SERVICE_NAME --json | jq -r '.[0].url // empty')
+
+          echo "Gateway URL: $GATEWAY_URL"
+          echo "Frontend URL: $FRONTEND_URL"
+
+          if [ -n "$GATEWAY_URL" ]; then
+            curl -f "$GATEWAY_URL/health" || (echo "Gateway health failed" && exit 1)
+          fi
+
+          if [ -n "$FRONTEND_URL" ]; then
+            curl -f "$FRONTEND_URL" || (echo "Frontend health failed" && exit 1)
+          fi
+
+      - name: Mark Deployment Success
+        if: success()
+        run: |
+          echo "✅ Deployment Succeeded"
+
+      - name: Handle Failure (Auto-Rollback placeholder)
+        if: failure()
+        run: |
+          echo "❌ Deployment Failed - Manual rollback or advanced strategy can be implemented here"
+          exit 1

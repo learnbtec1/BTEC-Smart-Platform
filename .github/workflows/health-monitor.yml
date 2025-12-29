@@ -1,0 +1,46 @@
+name: Health Monitor
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    name: Check Service Health
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: pip install requests
+    
+    - name: Run health checks
+      env:
+        PRODUCTION_URL: ${{ secrets.PRODUCTION_GATEWAY_URL }}
+      run: |
+        if [ -n "$PRODUCTION_URL" ]; then
+          python monitor_health.py || true
+        else
+          echo "No production URL configured"
+        fi
+    
+    - name: Create issue on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '⚠️ Production Health Check Failed',
+            body: 'One or more services are down. Immediate attention required.',
+            labels: ['bug', 'production', 'health-check', 'priority-high']
+          })

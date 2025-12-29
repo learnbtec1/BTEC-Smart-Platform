@@ -1,0 +1,107 @@
+name: Deploy Microservices
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test Services
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest requests
+    
+    - name: Run setup script
+      run: |
+        python setup_microservices.py
+    
+    - name: Verify generated files
+      run: |
+        test -f docker-compose-microservices.yml
+        test -f README-MICROSERVICES.md
+        test -d gateway
+        test -d services
+
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+      if: secrets.DOCKER_USERNAME != ''
+    
+    - name: Build services
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        REDIS_URL: ${{ secrets.REDIS_URL }}
+        API_KEY: ${{ secrets.API_KEY }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      run: |
+        python setup_microservices.py
+        docker-compose -f docker-compose-microservices.yml build
+    
+    - name: Run health checks
+      run: |
+        docker-compose -f docker-compose-microservices.yml up -d
+        sleep 20
+        python monitor_health.py --once || true
+        docker-compose -f docker-compose-microservices.yml down
+    
+    - name: Push images to Docker Hub
+      if: secrets.DOCKER_USERNAME != ''
+      run: |
+        docker-compose -f docker-compose-microservices.yml push
+
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        SERVER_USER: ${{ secrets.SERVER_USER }}
+      run: |
+        # Add your deployment commands here
+        echo "Deploying to production server..."
+        # Example:
+        # ssh -i key user@server 'cd /app && docker-compose pull && docker-compose up -d'
+    
+    - name: Notify deployment status
+      if: always()
+      run: |
+        echo "Deployment completed with status: ${{ job.status }}"

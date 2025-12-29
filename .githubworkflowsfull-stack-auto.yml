@@ -1,0 +1,119 @@
+name: BTEC Virtual World – Full Auto Build & Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  USER: ${{ github.actor }}
+  FRONTEND_DIR: frontend
+  BACKEND_DIR: backend
+  GATEWAY_IMAGE: ghcr.io/${{ github.actor }}/btec-gateway
+  SERVICE_IMAGE: ghcr.io/${{ github.actor }}/btec-service
+  NGINX_IMAGE: ghcr.io/${{ github.actor }}/btec-frontend
+
+jobs:
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend deps
+        run: |
+          cd $FRONTEND_DIR
+          npm ci || npm install
+
+      - name: Build frontend
+        run: |
+          cd $FRONTEND_DIR
+          npm run build
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: ${{ env.FRONTEND_DIR }}/dist
+
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend deps
+        run: |
+          cd $BACKEND_DIR
+          pip install -r requirements.txt
+
+      - name: Build backend images
+        run: |
+          docker build -t $SERVICE_IMAGE:latest backend/services/example_service
+          docker build -t $GATEWAY_IMAGE:latest backend
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push backend images
+        run: |
+          docker push $SERVICE_IMAGE:latest
+          docker push $GATEWAY_IMAGE:latest
+
+  build-nginx:
+    needs: [build-frontend, build-backend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend-build
+
+      - name: Build Nginx image
+        run: |
+          docker build \
+            -f infra/docker/nginx-gateway.Dockerfile \
+            -t $NGINX_IMAGE:latest .
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Nginx image
+        run: docker push $NGINX_IMAGE:latest
+
+  deploy:
+    needs: [build-nginx]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Production Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd ~/btec-platform
+            docker compose pull
+            docker compose up -d --force-recreate
+            docker system prune -f
