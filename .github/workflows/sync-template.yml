@@ -1,0 +1,22 @@
+name: Sync Template to Design
+
+on:
+  push:
+    branches:
+      - template
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Copy template to design
+        run: |
+          git fetch origin
+          git checkout design
+          git merge template --allow-unrelated-histories -m "Sync template to design"
+
+      - name: Push changes
+        run: |
+          git push origin design

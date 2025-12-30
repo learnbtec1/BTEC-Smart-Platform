@@ -1,0 +1,49 @@
+name: Build BTEC Frontend Template
+
+on:
+  push:
+    branches:
+      - design
+
+jobs:
+  build-template:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create project structure
+        run: |
+          mkdir -p src/pages
+          mkdir -p src/layout
+          mkdir -p src/router
+          mkdir -p src/hooks
+          mkdir -p src/services
+          mkdir -p src/store
+          mkdir -p src/lib
+          mkdir -p src/components/ui
+
+      - name: Add template files
+        run: |
+          echo "export default function Login() { return <div>Login Page</div> }" > src/pages/Login.tsx
+          echo "export default function Dashboard() { return <div>Dashboard</div> }" > src/pages/Dashboard.tsx
+          echo "export default function Upload() { return <div>Upload</div> }" > src/pages/Upload.tsx
+          echo "export default function Results() { return <div>Results</div> }" > src/pages/Results.tsx
+          echo "export default function Students() { return <div>Students</div> }" > src/pages/Students.tsx
+          echo "export default function Assignments() { return <div>Assignments</div> }" > src/pages/Assignments.tsx
+
+          echo "export default function AppLayout({children}) { return <div>{children}</div> }" > src/layout/AppLayout.tsx
+
+          echo "export const router = []; " > src/router/index.tsx
+
+          echo "export default function App() { return <div>App Loaded</div> }" > src/App.tsx
+          echo "console.log('main loaded')" > src/main.tsx
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Auto-build BTEC Smart Platform frontend template"
+          git push origin design

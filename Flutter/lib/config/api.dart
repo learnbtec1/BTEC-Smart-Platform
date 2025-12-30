@@ -1,3 +1,3 @@
 class ApiConfig {
-  static const String baseUrl = "https://your-backend-domain.com/api/v1";
+  static const String baseUrl = "http://localhost:8001/api/v1";
 }

@@ -5,6 +5,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -23,6 +25,9 @@ class HomePage extends StatelessWidget {
     'الصفحة الثالثة',
     'الصفحة الرابعة',
   ];
+
+HomePage({super.key});
+
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +72,7 @@ class HomePage extends StatelessWidget {
 class DetailPage extends StatelessWidget {
   final String title;
 
-  DetailPage({required this.title});
+  const DetailPage({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {

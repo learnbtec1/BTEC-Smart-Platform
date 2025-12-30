@@ -6,6 +6,8 @@ import "../models/analysis_result.dart";
 import "analysis_screen.dart";
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -17,22 +19,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _analyzeText() async {
     if (_textController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("???? ??? ???????")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("???? ??? ???????")));
       return;
     }
     setState(() => _isAnalyzing = true);
     try {
-      final submissionId = await ApiService.analyzeText(_textController.text.trim());
+      final submissionId =
+          await ApiService.analyzeText(_textController.text.trim());
       final result = await ApiService.getResults(submissionId);
       await DatabaseService().saveSubmission(result);
       setState(() {
         _result = result;
         _isAnalyzing = false;
       });
-      Navigator.push(context, MaterialPageRoute(builder: (_) => AnalysisScreen(result: result)));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (_) => AnalysisScreen(result: result)));
     } catch (e) {
       setState(() => _isAnalyzing = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("??? ?? ???????: \$e")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("??? ?? ???????: \$e")));
     }
   }
 
@@ -61,7 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 expands: true,
                 decoration: InputDecoration(
                   hintText: "???? ?? ?????? ???...",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0)),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -70,17 +77,29 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: _isAnalyzing ? null : _analyzeText,
+              style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Color(0xFF0078ff)),
               child: _isAnalyzing
-                  ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)), SizedBox(width: 10), Text("???? ???????...")])
+                  ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2)),
+                      SizedBox(width: 10),
+                      Text("???? ???????...")
+                    ])
                   : Text("??? ???????"),
-              style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 16), backgroundColor: Color(0xFF0078ff)),
             ),
             SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () => FileUploader().pickAndUploadFile(),
               icon: Icon(Icons.upload_file),
               label: Text("??? ??? PDF ?? DOCX"),
-              style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 16), side: BorderSide(color: Color(0xFF0078ff))),
+              style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: Color(0xFF0078ff))),
             ),
           ],
         ),
