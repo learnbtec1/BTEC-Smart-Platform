@@ -1,3 +1,4 @@
 fastapi
 uvicorn
 pydantic
+bcrypt==4.0.1
