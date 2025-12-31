@@ -1,0 +1,8 @@
+#! 0-btec-backend-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: btec-backend
+    labels:
+        com.docker.compose.project: btec-backend

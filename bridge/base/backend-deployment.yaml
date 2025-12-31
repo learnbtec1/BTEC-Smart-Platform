@@ -1,0 +1,73 @@
+#! backend-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: backend
+    namespace: btec-backend
+    labels:
+        com.docker.compose.project: btec-backend
+        com.docker.compose.service: backend
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: btec-backend
+            com.docker.compose.service: backend
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: btec-backend
+                com.docker.compose.service: backend
+                com.docker.compose.network.default: "true"
+        spec:
+            restartPolicy: Always
+            containers:
+                - name: backend
+                  image: btec-backend-backend
+                  imagePullPolicy: IfNotPresent
+                  args:
+                    - uvicorn
+                    - main:app
+                    - --host
+                    - 0.0.0.0
+                    - --port
+                    - 10000
+                  env:
+                    - name: ACCESS_TOKEN_EXPIRE_MINUTES
+                      value: "60"
+                    - name: ALGORITHM
+                      value: "HS256"
+                    - name: DATABASE_URL
+                      value: "postgresql://btec_user:btec_password@db:5432/btec_db"
+                    - name: DB_HOST
+                      value: "db"
+                    - name: DB_NAME
+                      value: "btec_db"
+                    - name: DB_PASSWORD
+                      value: "btec_password"
+                    - name: DB_PORT
+                      value: "5432"
+                    - name: DB_USER
+                      value: "btec_user"
+                    - name: DEBUG
+                      value: "True"
+                    - name: ENVIRONMENT
+                      value: "development"
+                    - name: POSTGRES_DB
+                      value: "btec_db"
+                    - name: POSTGRES_PASSWORD
+                      value: "btec_password"
+                    - name: POSTGRES_USER
+                      value: "btec_user"
+                    - name: REDIS_PASSWORD
+                      value: "b6S93kJNcvdPjgj1"
+                    - name: REDIS_URL
+                      value: "redis://redis:6379"
+                    - name: SECRET_KEY
+                      value: "2E42F0DF3331993F1906033912E839A967B4B2D1137D9F7E047009724B9F6601"
+                  ports:
+                    - name: backend-10000
+                      containerPort: 10000

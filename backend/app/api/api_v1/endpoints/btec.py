@@ -4,7 +4,26 @@ from app.btec_engine.audio_evaluator import transcribe_audio
 import tempfile
 import os
 
+from app import crud, models, schemas
+from app.api import deps
+
 router = APIRouter()
+
+
+@router.post("/assessments/", response_model=schemas.BTECAssessment)
+def create_assessment(
+    *,
+    assessment_in: schemas.BTECAssessmentCreate,
+    db: deps.SessionDep,
+    current_user: deps.CurrentUser,
+):
+    """
+    Create a new BTEC assessment.
+    """
+    assessment = crud.create_btec_assessment(
+        session=db, assessment_in=assessment_in, owner_id=current_user.id
+    )
+    return assessment
 
 
 @router.post("/evaluate/text")

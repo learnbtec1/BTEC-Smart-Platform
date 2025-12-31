@@ -14,7 +14,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# استخدم bcrypt_sha256 لتجنب حد 72 بايت
+pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 # =========================
@@ -25,7 +26,7 @@ fake_user = {
     "email": "admin",
     "name": "Admin User",
     "role": "teacher",
-    "hashed_password": pwd_context.hash("admin")
+    "hashed_password": pwd_context.hash("testpassword")
 }
 
 # =========================
@@ -41,7 +42,6 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:10000",
-        # أضف رابط Vercel عند النشر
     ],
     allow_credentials=True,
     allow_methods=["*"],

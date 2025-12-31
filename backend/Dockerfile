@@ -1,4 +1,3 @@
-# Dockerfile for production
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -13,6 +12,15 @@ RUN apt-get update \
 COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+
+RUN pip uninstall -y passlib bcrypt || true
+RUN pip install passlib
+RUN pip install --upgrade pydantic
+RUN pip install --upgrade fastapi
+RUN pip install pydantic-settings
+RUN pip install "pydantic[email]"
+RUN pip install "psycopg[binary]"
+RUN pip install sqlmodel
 
 COPY . .
 
