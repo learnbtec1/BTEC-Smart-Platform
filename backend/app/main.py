@@ -4,13 +4,15 @@ import random
 import uvicorn
 # Use package-style import so the app runs the same inside and outside Docker
 from app.api.api_v1.api import api_router
+from app.core.config import settings
 
 app = FastAPI(title="BTEC MetaVerse Engine 2500")
 
-# إعدادات CORS - للسماح للواجهة الأمامية بالاتصال بالسيرفر
+# إعدادات CORS - استخدم إعدادات `BACKEND_CORS_ORIGINS` من الإعدادات
+allow_origins = settings.all_cors_origins or ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

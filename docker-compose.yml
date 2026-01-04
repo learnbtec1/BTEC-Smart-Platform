@@ -26,7 +26,7 @@ services:
     build: ./backend
     container_name: btec-backend-v2
     ports:
-      - "10001:10000"
+      - "10000:10000"
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/btec_db
       - PROJECT_NAME=BTEC
