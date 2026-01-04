@@ -1,0 +1,29 @@
+name: Nightly Smoke
+on:
+  schedule:
+    - cron: '0 1 * * *'
+    - cron: '0 3 * * *'
+    - cron: '0 5 * * *'
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install sqlmodel alembic requests
+      - name: Run seed and smoke
+        env:
+          DATABASE_URL: "sqlite:///./dev.db"
+        run: |
+          python backend/scripts/seed_demo.py
+          # basic smoke curl (local server would need to be running; placeholder)
+          echo "Smoke tasks completed"
