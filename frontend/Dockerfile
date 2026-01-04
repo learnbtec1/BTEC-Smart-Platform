@@ -1,19 +1,14 @@
-# Stage 1 — Build the Vite app
-FROM node:18 AS build
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm install
+# تثبيت المكتبات
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
+# نسخ الكود
 COPY . .
-RUN npm run build
 
-# Stage 2 — Serve the built app with Nginx
-FROM nginx:alpine
-
-COPY --from=build /app/dist /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# بدل 'next start'، سنستخدم 'next dev' للتشغيل المباشر والحي
+EXPOSE 3000
+CMD ["npm", "run", "dev"]

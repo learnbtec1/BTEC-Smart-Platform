@@ -1,47 +1,44 @@
+version: '3.8'
+
 services:
+  # 1. قاعدة البيانات
   db:
-    image: postgres:17
-    restart: always
+    image: postgres:17-alpine
+    container_name: btec-db
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
       POSTGRES_DB: btec_db
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    restart: unless-stopped
 
-  redis:
-    image: redis:7-alpine
-    restart: always
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
+  # 2. الخلفية (Backend)
   backend:
     build: ./backend
-    restart: always
-    env_file: .env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    container_name: btec-backend
     ports:
       - "10000:10000"
-    command: uvicorn main:app --host 0.0.0.0 --port 10000
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/btec_db
+    restart: always
+    depends_on:
+      - db
 
+  # 3. الواجهة (Frontend)
   frontend:
     build: ./frontend
-    restart: always
+    container_name: btec-frontend
     ports:
-      - "5173:80"
+      - "3000:3000"
+    environment:
+      # نستخدم localhost لأن المتصفح هو من سينفذ الطلب من جهازك الشخصي
+      - NEXT_PUBLIC_API_URL=http://localhost:10000
+    depends_on:
+      - backend
+    restart: always
 
 volumes:
   postgres_data:
