@@ -1,54 +1,48 @@
-version: '3.8'
-
 services:
-  # 1. قاعدة البيانات
   db:
     image: postgres:17-alpine
     container_name: btec-db-v2
+    env_file: .env
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: btec_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
-    # --- الإضافة الجديدة: فحص الصحة ---
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d btec_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # 2. الخلفية (Backend)
   backend:
     build: ./backend
     container_name: btec-backend-v2
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL_INTERNAL}
+      PROJECT_NAME: BTEC
+      FIRST_SUPERUSER: ${FIRST_SUPERUSER}
+      FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD}
+      PYTHONPATH: /app
     ports:
       - "10000:10000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/btec_db
-      - PROJECT_NAME=BTEC
-      - POSTGRES_SERVER=db
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=btec_db
-      - FIRST_SUPERUSER=admin@example.com
-      - FIRST_SUPERUSER_PASSWORD=changeme
-    restart: always
     depends_on:
       db:
-        condition: service_healthy # الانتظار حتى تكتمل جاهزية القاعدة
+        condition: service_healthy
+    restart: always
+    command: ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "10000", "--reload"]
 
-  # 3. الواجهة (Frontend)
   frontend:
     build: ./frontend
     container_name: btec-frontend-v2
     ports:
       - "3001:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:10000
+      NEXT_PUBLIC_API_URL: "http://localhost:10000"
     depends_on:
       - backend
     restart: always
