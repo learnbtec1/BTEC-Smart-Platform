@@ -44,14 +44,18 @@ jobs:
         options: >-
           --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
     env:
+      # Critical settings are read from repository secrets when available.
+      # Recommended: set these secrets in the repository settings -> Secrets.
       PROJECT_NAME: btec
       POSTGRES_SERVER: 127.0.0.1
       POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: btec_db
-      FIRST_SUPERUSER: admin@example.com
-      FIRST_SUPERUSER_PASSWORD: changethis
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER || 'postgres' }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB || 'btec_db' }}
+      FIRST_SUPERUSER: ${{ secrets.FIRST_SUPERUSER || 'admin@example.com' }}
+      # Note: the application warns/error on default secrets in non-local envs.
+      # Use a repository secret for `FIRST_SUPERUSER_PASSWORD` in production.
+      FIRST_SUPERUSER_PASSWORD: ${{ secrets.FIRST_SUPERUSER_PASSWORD || 'changethis' }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
