@@ -1,0 +1,26 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260106162534
+Username: FFF\hamza_
+RunAs User: FFF\hamza_
+Configuration Name: 
+Machine: FFF (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 32116
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is .\build_log.txt
+PS D:\BTEC-backend> PowerShell -NoProfile -ExecutionPolicy Bypass -File .\build_complete.ps1 -Verbose
+
+PS D:\BTEC-backend> Stop-Transcript
+**********************
+Windows PowerShell transcript end
+End time: 20260106162537
+**********************

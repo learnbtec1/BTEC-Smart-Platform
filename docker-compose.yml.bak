@@ -1,0 +1,100 @@
+ackend> # إيقاف (تنظيف الحاويات الأيتام) ثم إعادة بناء وتشغيل backend فقط
+PS D:\BTEC-backend> docker compose down --remove-orphans
+failed to parse D:\BTEC-backend\docker-compose.yml: line 16: mapping key "backend" already defined at line 2
+PS D:\BTEC-backend> docker compose up -d --build backend
+failed to parse D:\BTEC-backend\docker-compose.yml: line 16: mapping key "backend" already defined at line 2
+PS D:\BTEC-backend>
+PS D:\BTEC-backend> # تابع سجلات الباكند للتأكد من بدء التشغيل بنجاح
+PS D:\BTEC-backend> docker logs -f btec-backend-v2 --tail 200
+INFO:     Will watch for changes in these directories: ['/app']
+INFO:     Uvicorn running on http://0.0.0.0:10000 (Press CTRL+C to quit)
+INFO:     Started reloader process [1] using StatReload
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/_subprocess.py", line 80, in subprocess_started
+    target(sockets=sockets)
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/_compat.py", line 60, in asyncio_run
+    return loop.run_until_complete(main)
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/config.py", line 439, in load
+    self.loaded_app = import_from_string(self.app)
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/importer.py", line 22, in import_from_string
+    raise exc from None
+  File "/usr/local/lib/python3.10/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    module = importlib.import_module(module_str)
+  File "/usr/local/lib/python3.10/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 992, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 992, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1004, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'backend'
+PS D:\BTEC-backend> ^C
+PS D:\BTEC-backend> ^C
+PS D:\BTEC-backend> Set-Location -Path 'D:\BTEC-backend'
+PS D:\BTEC-backend> Get-Content docker-compose.yml | ForEach-Object -Begin {$i=1} -Process { "{0,3}: {1}" -f $i++, $_ }
+  1: services:
+  2:   backend:
+  3:     build: ./backend
+  4:     container_name: btec-backend-v2
+  5:     env_file: .env
+  6:     environment:
+  7:       DATABASE_URL: ${DATABASE_URL_INTERNAL}
+  8:     ports:
+  9:       - "10000:10000"
+ 10:     depends_on:
+ 11:       db:
+ 12:         condition: service_healthy
+ 13:     restart: always
+ 14:     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000", "--reload"]
+ 15:
+ 16:   backend:
+ 17:     build: ./backend
+ 18:     container_name: btec-backend-v2
+ 19:     env_file: .env
+ 20:     environment:
+ 21:       DATABASE_URL: ${DATABASE_URL_INTERNAL}
+ 22:       PROJECT_NAME: BTEC
+ 23:       FIRST_SUPERUSER: ${FIRST_SUPERUSER}
+ 24:       FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD}
+ 25:       PYTHONPATH: /app
+ 26:     ports:
+ 27:       - "10000:10000"
+ 28:     depends_on:
+ 29:       db:
+ 30:         condition: service_healthy
+ 31:     restart: always
+ 32:     command: ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "10000", "--reload"]
+ 33:
+ 34:   frontend:
+ 35:     build: ./frontend
+ 36:     container_name: btec-frontend-v2
+ 37:     ports:
+ 38:       - "3001:3000"
+ 39:     environment:
+ 40:       NEXT_PUBLIC_API_URL: "http://localhost:10000"
+ 41:     depends_on:
+ 42:       - backend
+ 43:     restart: always
+ 44:
+ 45: volumes:
+ 46:   postgres_data:
+PS D:\BTEC-backend>
