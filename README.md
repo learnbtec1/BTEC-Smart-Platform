@@ -116,3 +116,41 @@ CI: A GitHub Actions workflow runs backend tests on push/PR: `.github/workflows/
 
 فقط اطلب، وأنا أجهّزها لك فورًا.
 
+---
+
+## Generating migrations (local workflow)
+
+A helper PowerShell script is provided to autogenerate Alembic migrations from anywhere inside the repo:
+
+- Script: `backend/scripts/gen_migration.ps1`
+
+Quick steps (PowerShell):
+
+```powershell
+# from repo root or backend folder
+& .\backend\scripts\gen_migration.ps1
+
+# or provide a DB URL (Postgres example)
+& .\backend\scripts\gen_migration.ps1 -DatabaseUrl 'postgresql://user:pass@localhost:5432/dbname'
+```
+
+What the script does:
+- Detects and uses the `backend` folder (safe path detection).
+- Activates `backend/.venv` if present.
+- Sets `DATABASE_URL` (uses a local SQLite file by default if none provided).
+- Runs `alembic revision --autogenerate -m "add assessments"` and prints the generated file path.
+
+After generation:
+1. Review the file created under `backend/app/alembic/versions/`.
+2. Apply it with:
+
+```powershell
+cd backend
+python -m alembic -c alembic.ini upgrade head
+```
+
+Notes:
+- Inspect the migration before applying — autogenerate can miss manual adjustments (FK `ondelete`, indexes, extensions).
+- The code change replacing `.dict()` with `.model_dump()` was applied to `backend/app/services/assessments.py` to avoid SQLModel deprecation warnings.
+
+
