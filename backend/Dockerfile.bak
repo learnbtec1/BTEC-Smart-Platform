@@ -1,6 +1,6 @@
-﻿
+
 # backend/Dockerfile
-FROM python:3.10-slim
+FROM python:3.14-slim
 
 # ØªØ«Ø¨ÙŠØª Ø§Ù„Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ Ù„ÙƒÙ† Ù…ÙÙŠØ¯ Ù„Ø¨Ø¹Ø¶ Ø§Ù„Ø­Ø²Ù…)
 RUN apt-get update && apt-get install -y --no-install-recommends \
