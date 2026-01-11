@@ -1,5 +1,12 @@
 from fastapi import APIRouter
-from .api_v1.api import api_router as api_v1_router
+# استيراد الملفات الموجودة لديك مسبقاً + الملف الجديد
+from app.api import auth, chat, courses, files, assessments
 
 api_router = APIRouter()
-api_router.include_router(api_v1_router, prefix="/api/v1")
+
+# تسجيل الموجهات (Routers)
+api_router.include_router(auth.router, prefix="/auth", tags=["Auth"])
+api_router.include_router(chat.router, prefix="/chat", tags=["Chat"])
+api_router.include_router(courses.router, prefix="/courses", tags=["Courses"])
+api_router.include_router(files.router, prefix="/files", tags=["Files"])
+api_router.include_router(assessments.router, prefix="/assessments", tags=["Assessments"])

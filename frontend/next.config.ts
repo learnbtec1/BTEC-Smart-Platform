@@ -1,13 +1,7 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // تفعيل دعم الـ Docker
-  output: 'standalone', 
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // تم ترك الإعدادات فارغة لتجنب الأخطاء
 };
 
 export default nextConfig;

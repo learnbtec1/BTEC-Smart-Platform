@@ -1,0 +1,16 @@
+C:\Users\hamza_\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\config\__init__.py:328: PluggyTeardownRaisedWarning: A plugin raised an exception during an old-style hookwrapper teardown.
+Plugin: helpconfig, Hook: pytest_cmdline_parse
+ConftestImportFailure: SyntaxError: expected '(' (virtual_tutor.py, line 12) (from D:\BTEC-backend\backend\tests\conftest.py)
+For more information see https://pluggy.readthedocs.io/en/stable/api_reference.html#pluggy.PluggyTeardownRaisedWarning
+  config = pluginmanager.hook.pytest_cmdline_parse(
+ImportError while loading conftest 'D:\BTEC-backend\backend\tests\conftest.py'.
+D:\BTEC-backend\backend\tests\conftest.py:42: in <module>
+    from app.main import app
+D:\BTEC-backend\backend\app\main.py:9: in <module>
+    from app.api.api_v1.endpoints import users, virtual_tutor  # \u0639\u062f\u0651\u0644 \u062d\u0633\u0628 \u0647\u064a\u0643\u0644\u0629 \u0645\u0634\u0631\u0648\u0639\u0643
+D:\BTEC-backend\backend\app\api\api_v1\endpoints\__init__.py:2: in <module>
+    from . import virtual_tutor
+E     File "D:\BTEC-backend\backend\app\api\api_v1\endpoints\virtual_tutor.py", line 12
+E       def virtual_tutordef virtual_tutor_recommendations(
+E                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   SyntaxError: expected '('

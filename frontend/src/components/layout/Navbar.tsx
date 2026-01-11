@@ -37,7 +37,7 @@ export function Navbar() {
               </Link>
             ))}
             <button className="px-5 py-2 bg-white text-black text-xs font-bold rounded-full hover:bg-cyan-400 transition-all">
-              LOGIN
+              تسجيل الدخول
             </button>
           </div>
 

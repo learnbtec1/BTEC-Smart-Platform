@@ -1,22 +1,27 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os
-from .api.main import api_router
+from app.api.main import api_router
 
-def create_app():
-    app = FastAPI(title="BTEC-backend (Keitagorus foundation)")
-    origins = ["http://localhost:3001"]
-    extra = os.environ.get("EXTRA_CORS_ORIGINS")
-    if extra:
-        origins.extend([o.strip() for o in extra.split(",") if o.strip()])
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    app.include_router(api_router)
-    return app
+app = FastAPI(title="BTEC Smart Platform API")
 
-app = create_app()
+# إعدادات CORS (السماح للواجهة بالاتصال)
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "*" # للسماح للكل أثناء التطوير
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ربط الروابط (API Routes)
+app.include_router(api_router, prefix="/api/v1")
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to BTEC API"}
