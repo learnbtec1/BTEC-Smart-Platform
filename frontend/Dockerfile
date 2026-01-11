@@ -1,5 +1,5 @@
 # builder stage
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 # copy only package files first to leverage cache
@@ -11,7 +11,7 @@ COPY . .
 RUN npm run build
 
 # production image
-FROM node:20-alpine
+FROM node:25-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
